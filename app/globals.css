@@ -1,26 +1,55 @@
 @import "tailwindcss";
 
+@theme {
+  --color-main-5: var(--color-teal-950);
+  --color-main-4: var(--color-teal-800);
+  --color-main-3: var(--color-teal-600);
+  --color-main-2: var(--color-teal-200);
+  --color-main-1: var(--color-teal-100);
+
+  --color-neutral-5: var(--color-slate-950);
+  --color-neutral-4: var(--color-slate-800);
+  --color-neutral-3: var(--color-slate-600);
+  --color-neutral-2: var(--color-slate-400);
+  --color-neutral-1-5: var(--color-slate-300);
+  --color-neutral-1: var(--color-slate-200);
+
+  --color-accent-5: var(--color-violet-950);
+  --color-accent-4: var(--color-violet-900);
+  --color-accent-3: var(--color-violet-600);
+  --color-accent-2: var(--color-violet-400);
+  --color-accent-1: var(--color-violet-300);
+
+  --color-warning-5: var(--color-yellow-900);
+  --color-warning-4: var(--color-yellow-700);
+  --color-warning-3: var(--color-yellow-500);
+  --color-warning-2: var(--color-yellow-300);
+  --color-warning-1: var(--color-yellow-100);
+
+  --color-error-5: var(--color-red-950);
+  --color-error-4: var(--color-red-900);
+  --color-error-3: var(--color-red-600);
+  --color-error-2: var(--color-red-400);
+  --color-error-1: var(--color-red-300);
+
+}
+
+.bg-login {
+  background: repeating-linear-gradient(60deg, var(--color-main-4), var(--color-main-4) 50%, var(--color-neutral-1) 50%, var(--color-neutral-1) 100%);
+}
 :root {
   --background: #ffffff;
   --foreground: #171717;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
   }
-}
+} */
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
