@@ -5,7 +5,7 @@ import { getMasterKey, getStretchedMasterKey, getMasterPasswordHash } from '../.
 describe("getMasterKey vs. Argon2 CLI", () => {
     const email = "alice@example.com";
     const password = "my_Password_123";
-    const cmd = `printf ${password} | argon2 $(printf ${email} | sha256sum --quiet) -id -t 3 -m 16 -p 4 -r`;
+    const cmd = `printf ${password} | argon2 "$(printf ${email} | sha256sum | awk '{ print $1}' )" -id -t 3 -m 16 -p 4 -r`;
     const cliHash = execSync(cmd).toString().trim();
     test("produces the same output as Argon2 CLI", async () => {
         const buf = await getMasterKey(email, password);
