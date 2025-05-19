@@ -1,0 +1,30 @@
+name: Run tests
+
+on:
+  push:
+    paths:
+      - 'lib/auth/**'
+      - 'test/**'
+  pull_request:
+    paths:
+      - 'lib/auth/**'
+      - 'test/**'
+
+jobs:
+  master-key:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Install argon2
+        run: sudo apt-get update && sudo apt-get install argon2
+      
+      - name: Run tests
+        run: pnpm test
