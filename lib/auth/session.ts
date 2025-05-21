@@ -1,3 +1,4 @@
+'use server'
 import { Session, sessions, User } from "@/lib/db/schema";
 import { randomBytes } from "crypto";
 import { db } from "@/lib/db/drizzle";
@@ -7,7 +8,7 @@ import { eq } from "drizzle-orm";
 const UNIQUE_VIOLATION = "23505";
 const createSession = async (user: User) => {
     while (true) {
-        const expires15min = new Date(Date.now() + 5 * 60 * 1000);
+        const expires15min = new Date(Date.now() + 15 * 60 * 1000);
         const sessionId = randomBytes(32).toString('hex');
         const newSession: Session = {
             id: sessionId,
@@ -57,4 +58,12 @@ export const getSession = async () => {
         return null;
     }
     return sessionData;
+}
+
+export const clearSession = async () => {
+    const cookieStore = await cookies();
+    const cookie = cookieStore.get('session')?.value;
+    if (!cookie) return;
+    cookieStore.delete('session');
+    await db.delete(sessions).where(eq(sessions.id, cookie));
 }

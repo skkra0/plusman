@@ -5,11 +5,6 @@ export const openSans = Open_Sans({
   subsets: ["latin"],
 });
 
-export const neuton = Neuton({
-  subsets: ["latin"],
-  weight: "400",
-});
-
 export const hind = Hind({
   subsets: ["latin"],
   weight: "400"

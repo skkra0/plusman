@@ -1,3 +1,4 @@
+import classNames from "classnames";
 
 const getButtonStyle = (level: string) => {
     if (level === 'main') {
@@ -8,7 +9,11 @@ const getButtonStyle = (level: string) => {
 }
 export default function Button({className, level, ...props} : React.ComponentProps<"button"> & { level: string }) {
     return <button
-        className={`rounded-xl cursor-pointer p-2 pl-5 pr-5 text-center w-full ${getButtonStyle(level)} ${className}`}
+        className={classNames(
+            "rounded-xl cursor-pointer p-2 pl-5 pr-5 text-center w-full",
+            getButtonStyle(level),
+            className)
+        }
         {...props}
     />
 }

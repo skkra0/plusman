@@ -52,7 +52,7 @@ export const genSymmetricKey = () : Buffer<ArrayBuffer> => {
 }
 
 export const getHmac = (key: Buffer, symmetricKey: Buffer) => {
-    const hmac = createHmac('sha256', key);
+    const hmac = createHmac('sha512', key);
     hmac.update(symmetricKey);
 
     return hmac.digest();
@@ -91,3 +91,10 @@ export const getMasterPasswordHash = async (masterKey: Buffer, password: string)
     return Buffer.from(masterHashResult).toString('base64');
 };
 
+export const getEncryptionCryptoKey = async (key: Buffer<ArrayBuffer>) => {
+    return crypto.subtle.importKey('raw', key, {name: 'AES-CBC'} , false, ['encrypt', 'decrypt']);
+}
+
+export const getHmacCryptoKey = async (key: Buffer<ArrayBuffer>) => {
+    return crypto.subtle.importKey('raw', key, { name: 'HMAC', 'hash': 'sha512'}, false, ['sign', 'verify'])
+}

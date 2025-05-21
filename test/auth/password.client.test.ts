@@ -54,4 +54,4 @@ describe("getMasterPasswordHash (client) vs. Argon2 CLI", () => {
         const buf = await getMasterPasswordHash(masterKey, password);
         expect(buf).toBe(cliHash);
     });
-})
+});

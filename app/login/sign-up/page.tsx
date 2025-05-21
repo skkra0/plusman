@@ -7,7 +7,7 @@ import { KeyContext } from '@/components/key-provider';
 import { useRouter } from 'next/navigation';
 
 export default function SignUpPage() {
-    const { setKey } = useContext(KeyContext);
+    const { setKey, setHmacKey } = useContext(KeyContext);
     const router = useRouter();
     const handleSignUp = async (email: string, password: string) => {
         const masterKey = await keys.getMasterKey(email, password);
@@ -18,8 +18,10 @@ export default function SignUpPage() {
     
         const res = await signUp(email, mpHash, psKey, hmac);
         if (res.success) {
-            const ck = await crypto.subtle.importKey('raw', symmetricKey.subarray(0, 32), 'AES-CBC', false, ['encrypt', 'decrypt']);
+            const ck = await keys.getEncryptionCryptoKey(symmetricKey.subarray(0, 32));
             setKey(ck);
+            const hk = await keys.getHmacCryptoKey(symmetricKey.subarray(32));
+            setHmacKey(hk);
             router.push('/vault');
 
             return '';

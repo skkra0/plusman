@@ -1,6 +1,9 @@
 import Cmp from "@/components/cmp";
 import WithAuth from "@/components/with-auth";
+import AddLoginModal from "./add-login-modal";
 
 export default function Vault() {
-    return <WithAuth><Cmp/></WithAuth>
+    return <WithAuth>
+        <AddLoginModal/>
+    </WithAuth>
 }

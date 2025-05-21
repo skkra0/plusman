@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "argon2": "^0.43.0",
+    "classnames": "^2.5.1",
     "drizzle-orm": "^0.43.1",
     "esbuild": "^0.25.4",
     "futoin-hkdf": "^1.5.3",
