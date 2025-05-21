@@ -5,7 +5,8 @@ import { setSession } from '../../lib/auth/session';
 import { NewUser, users } from '@/lib/db/schema';
 import { comparePasswords, getMasterPasswordHash } from '@/lib/auth/server/password.server';
 
-export const signIn = async (email: string, clientHash: string) => {
+type SignInResult = { success: false, error: string } | { success: true, protectedSymmetricKey: string, hmac: string };
+export const signIn = async (email: string, clientHash: string) : Promise<SignInResult> => {
     const user = await db.query.users.findFirst({
         where: (users, { eq }) => eq(users.email, email)
     });
@@ -29,12 +30,13 @@ export const signIn = async (email: string, clientHash: string) => {
     
     return {
         success: true,
-        error: '',
         protectedSymmetricKey: user.protectedSymmetricKey,
+        hmac: user.hmac,
     }
 }
 
-export const signUp = async (email: string, clientHash: string, protectedSymmetricKey: string) => {
+type SignUpResult = { success: false, error: string } | { success: true };
+export const signUp = async (email: string, clientHash: string, protectedSymmetricKey: string, hmac: string) : Promise<SignUpResult> => {
     const existingUser = await db.query.users.findFirst({
         where: (users, { eq }) => eq(users.email, email)
     });
@@ -51,6 +53,7 @@ export const signUp = async (email: string, clientHash: string, protectedSymmetr
         email,
         passwordHash,
         protectedSymmetricKey,
+        hmac,
     };
 
     const [createdUser] = await db.insert(users).values(newUser).returning();
@@ -66,6 +69,5 @@ export const signUp = async (email: string, clientHash: string, protectedSymmetr
 
     return {
         success: true,
-        error: '',
     };
 }

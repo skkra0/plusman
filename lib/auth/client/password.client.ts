@@ -1,5 +1,5 @@
 import hkdf from 'futoin-hkdf';
-import { createCipheriv, randomBytes } from 'crypto';
+import { createCipheriv, createDecipheriv, createHmac, randomBytes, randomFill } from 'crypto';
 import { argon2id, sha256 } from 'hash-wasm';
 
 const MIN_LEN = 12;
@@ -43,17 +43,38 @@ export const getStretchedMasterKey = (masterKey: Buffer) => {
     return hkdf(masterKey, 64, { hash: 'SHA-256' });
 }
 
-export const getProtectedSymmetricKey = async (masterKey: Buffer) => {
-    const stretchedMasterKey = getStretchedMasterKey(masterKey);
-    const generatedSymmetricKey = randomBytes(64);
-    const iv = randomBytes(16);
+export const genSymmetricKey = () : Buffer<ArrayBuffer> => {
+    const buf = Buffer.alloc(64);
+    randomFill(buf, (err, buf) => {
+        if (err) throw err;
+    });
+    return buf;
+}
 
-    const cipher = createCipheriv('aes-256-cbc', stretchedMasterKey.subarray(0, 32), iv);
+export const getHmac = (key: Buffer, symmetricKey: Buffer) => {
+    const hmac = createHmac('sha256', key);
+    hmac.update(symmetricKey);
 
-    let encrypted = cipher.update(generatedSymmetricKey);
-    encrypted = Buffer.concat([encrypted, cipher.final()]);
+    return hmac.digest();
+}
 
-    return encrypted.toString('base64');
+export const createProtectedSymmetricKey = (stretchedMasterKey: Buffer, sk?: Buffer, iv?: Buffer) => {
+    const symmetricKey = sk ? sk : randomBytes(64);
+    const initVec = iv ? iv : randomBytes(16);
+    const cipher = createCipheriv('aes-256-cbc', stretchedMasterKey.subarray(0, 32), initVec);
+    const protectedKey = Buffer.concat([initVec, cipher.update(symmetricKey), cipher.final()]);
+    
+    const hmac = getHmac(stretchedMasterKey.subarray(32), symmetricKey);
+    return [protectedKey.toString('base64'), hmac.toString('base64')];
+}
+
+export const decryptSymmetricKey = (key: Buffer, protectedSymmetricKey: string) => {
+    const buf = Buffer.from(protectedSymmetricKey, 'base64');
+    const iv = buf.subarray(0, 16);
+    const protectedKey = buf.subarray(16);
+    const decipher = createDecipheriv('aes-256-cbc', key, iv);
+
+    return Buffer.concat([decipher.update(protectedKey), decipher.final()]);
 }
 
 export const getMasterPasswordHash = async (masterKey: Buffer, password: string) => {
@@ -69,3 +90,4 @@ export const getMasterPasswordHash = async (masterKey: Buffer, password: string)
 
     return Buffer.from(masterHashResult).toString('base64');
 };
+

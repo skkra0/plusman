@@ -1,3 +1,6 @@
+import Cmp from "@/components/cmp";
+import WithAuth from "@/components/with-auth";
+
 export default function Vault() {
-    return <p>hi</p>
+    return <WithAuth><Cmp/></WithAuth>
 }

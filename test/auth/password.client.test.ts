@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
-import { hkdfSync } from 'node:crypto';
-import { getMasterKey, getStretchedMasterKey, getMasterPasswordHash } from '../../lib/auth/client/password.client';
+import { createDecipheriv, hkdfSync, randomBytes } from 'node:crypto';
+import { getMasterKey, getStretchedMasterKey, getMasterPasswordHash, createProtectedSymmetricKey } from '../../lib/auth/client/password.client';
 
 describe("getMasterKey vs. Argon2 CLI", () => {
     const email = "alice@example.com";
@@ -21,6 +21,24 @@ describe("getStretchedMasterKey vs Node hkdf", () => {
     test("produces the same output as Node hkdf", () => {
         expect(stretched.buffer).toEqual(expectedKey);
     })
+});
+
+describe("getProtectedSymmetricKey", () => {
+    const stretched = randomBytes(64);
+    const symmetricKey = randomBytes(64);
+    const iv = randomBytes(16);
+    const decipher = createDecipheriv('aes-256-cbc', stretched.subarray(0, 32), iv);
+    const [psKey, hmac] = createProtectedSymmetricKey(stretched, symmetricKey, iv);
+    const psKeyRes = Buffer.from(psKey, 'base64');
+    test("iv matches", () => {
+        const foundIV = psKeyRes.subarray(0, 16);
+        expect(foundIV).toEqual(iv);
+    });
+    test("can be decrypted correctly", () => {
+        const protectedKey = psKeyRes.subarray(16);
+        const decrypted = Buffer.concat([decipher.update(protectedKey), decipher.final()]);
+        expect(decrypted).toEqual(symmetricKey);
+    });
 });
 
 describe("getMasterPasswordHash (client) vs. Argon2 CLI", () => {
