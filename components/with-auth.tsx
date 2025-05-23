@@ -1,3 +1,4 @@
+'use server'
 import { getSession } from '@/lib/auth/session';
 import { redirect } from 'next/navigation';
 import { ReactNode } from 'react';

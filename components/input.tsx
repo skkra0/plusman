@@ -12,6 +12,8 @@ export default function Input({ className, labelClassName, type, label, error, .
             {...props}
         />
     </label>
-    <p className="absolute text-sm text-error-3">{error}</p>
+    <div className="text-sm">
+         <p className="text-error-3 empty:before:inline-block">{error}</p>
+    </div>
     </div>
 }

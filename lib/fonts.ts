@@ -7,5 +7,5 @@ export const openSans = Open_Sans({
 
 export const hind = Hind({
   subsets: ["latin"],
-  weight: "400"
+  weight: ["400", "600"]
 });

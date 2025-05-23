@@ -6,6 +6,7 @@ import { ChangeEvent, FormEvent, useCallback, useState } from 'react';
 import { openSans } from '@/lib/fonts';
 import { validatePassword } from '@/lib/auth/client/password.client';
 import classNames from 'classnames';
+import PasswordInput from '@/components/password-input';
 
 interface LoginState {
     email: string,
@@ -69,7 +70,7 @@ export default function Login({ mode = 'signin', handleLogin } : {
     }
 
     return (<div className="h-screen flex flex-col justify-center items-center bg-neutral-1 bg-login">
-            <div className="z-10 w-3/4 lg:w-1/3 min-h-1/2 bg-neutral-1 rounded-2xl shadow-lg shadow-neutral-3 flex justify-center items-center">
+            <div className="z-10 w-3/4 lg:w-1/3 min-h-1/2 bg-neutral-1 rounded-2xl shadow-md shadow-neutral-3 flex justify-center items-center">
                 <div className="flex flex-col justify-around items-center w-3/4">
                     <h1 className={classNames(openSans.className, "font-bold text-3xl text-main-5 mb-5")}>
                         { mode == 'signin' ? "Sign In" : "Sign Up" }
@@ -82,7 +83,7 @@ export default function Login({ mode = 'signin', handleLogin } : {
                         error={loginState.emailErr}
                         onChange={onChangeEmail}
                         />
-                        <Input
+                        <PasswordInput
                         type="password"
                         placeholder="Master password"
                         label="Master password"
@@ -90,12 +91,10 @@ export default function Login({ mode = 'signin', handleLogin } : {
                         error={loginState.pwErr}
                         onChange={onChangePassword}
                         />
-                        <div className="h-1">
-                            <p className="text-error-3 p-0 m-0">{loginState.serverErr}</p>
-                        </div>
-                        <Button type='submit' level='main'>Submit</Button>
+                        <p className="text-error-3 p-0 m-0">{loginState.serverErr}</p>
+                        <Button type='submit' level='main' className="border-b-2 border-neutral-1 hover:border-neutral-3 w-full">Submit</Button>
                         <a href={mode == 'signin' ? "/login/sign-up" : "/login/sign-in"}>
-                            <Button level='secondary' type='button'>
+                            <Button level='secondary' type='button' className="w-full">
                                 { mode == 'signin' ? 'Create an account instead' : 'Sign into existing account instead' }
                             </Button>
                         </a>

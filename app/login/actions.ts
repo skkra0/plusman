@@ -5,7 +5,7 @@ import { setSession } from '../../lib/auth/session';
 import { NewUser, users } from '@/lib/db/schema';
 import { comparePasswords, getMasterPasswordHash } from '@/lib/auth/server/password.server';
 
-type SignInResult = { success: false, error: string } | { success: true, protectedSymmetricKey: string, hmac: string };
+type SignInResult = { success: false, error: string } | { success: true, key: string };
 export const signIn = async (email: string, clientHash: string) : Promise<SignInResult> => {
     const user = await db.query.users.findFirst({
         where: (users, { eq }) => eq(users.email, email)
@@ -19,7 +19,9 @@ export const signIn = async (email: string, clientHash: string) : Promise<SignIn
     }
 
     const masterPasswordHash = user.passwordHash;
-    if (!comparePasswords(clientHash, masterPasswordHash)) {
+    const decoded = Buffer.from(clientHash, 'base64')
+    const res = await comparePasswords(decoded, masterPasswordHash);
+    if (!res) {
         return {
             success: false,
             error: 'Invalid email or password.',
@@ -30,13 +32,12 @@ export const signIn = async (email: string, clientHash: string) : Promise<SignIn
     
     return {
         success: true,
-        protectedSymmetricKey: user.protectedSymmetricKey,
-        hmac: user.hmac,
+        key: user.key,
     }
 }
 
 type SignUpResult = { success: false, error: string } | { success: true };
-export const signUp = async (email: string, clientHash: string, protectedSymmetricKey: string, hmac: string) : Promise<SignUpResult> => {
+export const signUp = async (email: string, clientHash: string, key: string) : Promise<SignUpResult> => {
     const existingUser = await db.query.users.findFirst({
         where: (users, { eq }) => eq(users.email, email)
     });
@@ -52,8 +53,7 @@ export const signUp = async (email: string, clientHash: string, protectedSymmetr
     const newUser: NewUser = {
         email,
         passwordHash,
-        protectedSymmetricKey,
-        hmac,
+        key
     };
 
     const [createdUser] = await db.insert(users).values(newUser).returning();

@@ -17,10 +17,7 @@ export const getMasterPasswordHash = async (clientHash: string, salt?: Buffer) =
 
     return passwordHash;
 };
-export const comparePasswords = async (clientHash: string, passwordHash: string) => {
-    try {
-        return await verify(passwordHash, clientHash);
-    } catch (err) {
-        console.log(err);
-    }
+export const comparePasswords = async (clientHash: Buffer, passwordHash: string) => {
+    const res = await verify(passwordHash, clientHash);
+    return res;
 }

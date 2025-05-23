@@ -7,7 +7,7 @@ import { useContext } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function SignInPage() {
-    const { setKey, setHmacKey } = useContext(KeyContext);
+    const { setKeys } = useContext(KeyContext);
     const router = useRouter();
     const handleSignIn = async (email: string, password: string) => {
         const masterKey = await keys.getMasterKey(email, password);
@@ -17,15 +17,9 @@ export default function SignInPage() {
         const res = await signIn(email, mpHash);
         if (res.success) {
             
-            const symmetricKey = keys.decryptSymmetricKey(stretched.subarray(0, 32), res.protectedSymmetricKey);
-            const hmac = keys.getHmac(stretched.subarray(32), symmetricKey).toString('base64');
-            if (hmac != res.hmac) {
-                throw new Error("Invalid symmetric key.")
-            }
-            const ck = await keys.getEncryptionCryptoKey(symmetricKey.subarray(0, 32));
-            setKey(ck);
-            const hk = await keys.getHmacCryptoKey(symmetricKey.subarray(32));
-            setHmacKey(hk);
+            const userKeys = await keys.getUserKeys(stretched, res.key);
+
+            setKeys(userKeys);
             
             router.push('/vault');
             

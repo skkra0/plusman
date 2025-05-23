@@ -6,17 +6,17 @@ import { useRouter } from "next/navigation";
 import { useContext, useEffect } from "react"
 
 export default function LogOut() {
-    const { setKey } = useContext(KeyContext);
+    const { setKeys } = useContext(KeyContext);
     const router = useRouter();
     useEffect(() => {
         const logout = async () => {
-            setKey(null);
+            setKeys(null);
             await clearSession();
-            router.push("/login/sign-in");
+            router.push('/login/sign-in');
         }
-        
+
         logout();
-    }, [setKey, router]);
+    }, [setKeys, router]);
 
     return null;
 }
