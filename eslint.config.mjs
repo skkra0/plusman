@@ -10,8 +10,8 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
-  ...compat.extends({
-    extends: ["next/core-web-vitals", "next/typescript"],
+  ...compat.config({
+    extends: ['next'],
     rules: {
       'prefer-const': 'off',
     }
