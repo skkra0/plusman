@@ -1,13 +1,14 @@
 'use server'
 import { Session, sessions, User } from "@/lib/db/schema";
 import { randomBytes } from "crypto";
-import { db } from "@/lib/db/drizzle";
+import { getDb } from "@/lib/db/drizzle";
 import { cookies } from "next/headers";
 import { eq } from "drizzle-orm";
 import { PostgresError } from "postgres";
 
 const UNIQUE_VIOLATION = "23505";
 const createSession = async (user: User) => {
+    const db = getDb();
     while (true) {
         const expires15min = new Date(Date.now() + 15 * 60 * 1000);
         const sessionId = randomBytes(32).toString('hex');
@@ -42,6 +43,7 @@ export const setSession = async (user: User) => {
 }
 
 export const getSession = async () => {
+    const db = getDb();
     const cookie = (await cookies()).get('session')?.value;
     if (!cookie) {
         return null;
@@ -62,6 +64,7 @@ export const getSession = async () => {
 }
 
 export const clearSession = async () => {
+    const db = getDb();
     const cookieStore = await cookies();
     const cookie = cookieStore.get('session')?.value;
     if (!cookie) return;
