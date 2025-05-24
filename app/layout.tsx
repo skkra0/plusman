@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { hind } from "@/lib/fonts";
 import "./globals.css";
+import KeyProvider from "@/components/key-provider";
 
 export const metadata: Metadata = {
   title: "Plusman",
@@ -14,7 +15,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={hind.className}>
-      <body>{children}</body>
+      <body>
+        <KeyProvider>{children}</KeyProvider>
+      </body>
     </html>
   );
 }

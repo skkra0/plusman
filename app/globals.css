@@ -3,15 +3,16 @@
 @theme {
   --color-main-5: var(--color-teal-950);
   --color-main-4: var(--color-teal-800);
+  --color-main-3-5: oklch(0.5445 0.118 184.71);
   --color-main-3: var(--color-teal-600);
-  --color-main-2: var(--color-teal-200);
+  --color-main-2: var(--color-teal-500);
   --color-main-1: var(--color-teal-100);
 
   --color-neutral-5: var(--color-slate-950);
   --color-neutral-4: var(--color-slate-800);
   --color-neutral-3: var(--color-slate-600);
-  --color-neutral-2: var(--color-slate-400);
-  --color-neutral-1-5: var(--color-slate-300);
+  --color-neutral-2: var(--color-slate-300);
+  --color-neutral-1-5: oklch(0.8783 0.022 255.508);
   --color-neutral-1: var(--color-slate-200);
 
   --color-accent-5: var(--color-violet-950);
@@ -28,18 +29,23 @@
 
   --color-error-5: var(--color-red-950);
   --color-error-4: var(--color-red-900);
-  --color-error-3: var(--color-red-600);
-  --color-error-2: var(--color-red-400);
+  --color-error-3-5: var(--color-red-800);
+  --color-error-3: var(--color-red-700);
+  --color-error-2: var(--color-red-500);
   --color-error-1: var(--color-red-300);
 
 }
 
 .bg-login {
-  background: repeating-linear-gradient(60deg, var(--color-main-4), var(--color-main-4) 50%, var(--color-neutral-1) 50%, var(--color-neutral-1) 100%);
+  background: repeating-linear-gradient(60deg, var(--color-main-4), var(--color-main-4) 50%, var(--color-neutral-1-5) 50%, var(--color-neutral-1-5) 100%);
+}
+
+.bg-header {
+  background: repeating-linear-gradient(40deg, var(--color-main-4), var(--color-main-4) 40%, var(--color-neutral-1) 40%, var(--color-neutral-1) 100%);
 }
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: var(--color-neutral-5);
 }
 
 /* @media (prefers-color-scheme: dark) {

@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "hmac" text NOT NULL;

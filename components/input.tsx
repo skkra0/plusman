@@ -1,7 +1,19 @@
-export default function Input({ className, type, ...props } : React.ComponentProps<"input">) {
-    return <input
-        type={type}
-        className={`rounded-xl border border-neutral-3 p-1 pl-3 h-9 w-full hover:border-2 outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-main-3 focus:border-main-3 ${className}`}
-        {...props}
-    />
+import classNames from "classnames";
+
+export default function Input({ className, labelClassName, type, label, error, ...props } : React.ComponentProps<"input"> & { label?: string, labelClassName?: string, error?: string }) {
+    return <div>
+    <label className={labelClassName}>{label}
+        <input
+            type={type}
+            className={classNames(
+                "rounded-lg border border-neutral-3 text-md p-1 pl-3 mb-1 h-9 w-full", 
+                "hover:border-main-3 outline-none focus-visible:border-ring focus-visible:ring-[1px] focus-visible:ring-main-3 focus:border-main-3",
+                className)}
+            {...props}
+        />
+    </label>
+    <div className="text-sm">
+         <p className="text-error-3 empty:before:inline-block">{error}</p>
+    </div>
+    </div>
 }
