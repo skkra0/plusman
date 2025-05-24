@@ -17,8 +17,23 @@ spec:
         image: ghcr.io/skkra0/plusman:release
         imagePullPolicy: IfNotPresent
         ports: [{ containerPort: 3000 }]
-        readinessProbe: { httpGet: { path: "/", port: 3000 } }
-        livenessProbe: { httpGet: { path: "/_next", port: 3000 } }
+        readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 2
+            successThreshold: 1
+            failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /_next
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 20
+          timeoutSeconds: 2
+          failureThreshold: 5
         env:
           - name: POSTGRES_URL
             valueFrom:
