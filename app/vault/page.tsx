@@ -72,3 +72,5 @@ export default function Vault() {
         <EditItemModal state={modalState} setState={setModalState} />
     </>
 }
+
+export const dynamic = "force-dynamic";

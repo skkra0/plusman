@@ -1,11 +1,12 @@
 'use server'
 import { getSession } from "@/lib/auth/session";
-import { db } from "@/lib/db/drizzle";
+import { getDb } from "@/lib/db/drizzle";
 import { Item, items, NewItem } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
 type fetchItemsResult = { success: false, error: string } | { success: true, items: Item[] };
 export const fetchItems = async () : Promise<fetchItemsResult> => {
+    const db = getDb();
     const session = await getSession();
     if (!session) {
         return {
@@ -34,6 +35,7 @@ export const addItem = async (item: NewItem) : Promise<UpdateItemResult> => {
         };
     }
 
+    const db = getDb();
     item.userId = session.userId;
     const [insertedItem] = await db.insert(items).values(item).returning();
     if (!insertedItem) {
@@ -50,6 +52,7 @@ export const addItem = async (item: NewItem) : Promise<UpdateItemResult> => {
 }
 
 export const updateItem = async (item: Item) : Promise<UpdateItemResult> => {
+    
     const session = await getSession();
     if (!session) {
         return {
@@ -65,6 +68,7 @@ export const updateItem = async (item: Item) : Promise<UpdateItemResult> => {
         };
     }
 
+    const db = getDb();
     const existingItem = await db.query.items.findFirst({
         where: (items, { eq }) => eq(items.id, item.id)
     });
@@ -120,6 +124,7 @@ export const deleteItem = async (item: Item) : Promise<DeleteItemResult> => {
         };
     }
 
+    const db = getDb();
     try {
         await db.delete(items).where(eq(items.id, item.id));
         return {

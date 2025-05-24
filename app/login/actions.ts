@@ -1,12 +1,13 @@
 'use server'
 
-import { db } from '@/lib/db/drizzle';
+import { getDb } from '@/lib/db/drizzle';
 import { setSession } from '../../lib/auth/session';
 import { NewUser, users } from '@/lib/db/schema';
 import { comparePasswords, getMasterPasswordHash } from '@/lib/auth/server/password.server';
 
 type SignInResult = { success: false, error: string } | { success: true, key: string };
 export const signIn = async (email: string, clientHash: string) : Promise<SignInResult> => {
+    const db = getDb();
     const user = await db.query.users.findFirst({
         where: (users, { eq }) => eq(users.email, email)
     });
@@ -37,6 +38,7 @@ export const signIn = async (email: string, clientHash: string) : Promise<SignIn
 
 type SignUpResult = { success: false, error: string } | { success: true };
 export const signUp = async (email: string, clientHash: string, key: string) : Promise<SignUpResult> => {
+    const db = getDb();
     const existingUser = await db.query.users.findFirst({
         where: (users, { eq }) => eq(users.email, email)
     });
