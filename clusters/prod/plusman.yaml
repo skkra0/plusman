@@ -1,0 +1,14 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: plusman
+  namespace: flux-system
+spec:
+  interval: 60s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  targetNamespace: default
+  path: ./infra/plusman
+  prune: true
+  wait: true
