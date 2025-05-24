@@ -12,14 +12,14 @@ export default function SignUpPage() {
     const handleSignUp = async (email: string, password: string) => {
         const masterKey = await keys.getMasterKey(email, password);
         const mpHash = await keys.getMasterPasswordHash(masterKey, password);
-        const stretched = keys.getStretchedMasterKey(masterKey);
+        const stretched = await keys.getStretchedMasterKey(masterKey);
         const symmetricKey = keys.genSymmetricKey();
-        const encodedKeys = keys.createEncodedProtectedKey(stretched, symmetricKey);
+        const encodedKeys = await keys.encryptAndSign(stretched, symmetricKey);
     
         const res = await signUp(email, mpHash, encodedKeys);
         if (res.success) {
             const ck = await keys.getEncryptionCryptoKey(symmetricKey.subarray(0, 32));
-            const hk = await keys.getHmacCryptoKey(symmetricKey.subarray(32));
+            const hk = await keys.getAuthCryptoKey(symmetricKey.subarray(32));
             setKeys({
                 encryptionKey: ck,
                 authKey: hk,

@@ -11,6 +11,7 @@ export default function LogOut() {
     useEffect(() => {
         const logout = async () => {
             setKeys(null);
+            
             await clearSession();
             router.push('/login/sign-in');
         }

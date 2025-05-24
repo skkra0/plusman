@@ -4,6 +4,7 @@ import { randomBytes } from "crypto";
 import { db } from "@/lib/db/drizzle";
 import { cookies } from "next/headers";
 import { eq } from "drizzle-orm";
+import { PostgresError } from "postgres";
 
 const UNIQUE_VIOLATION = "23505";
 const createSession = async (user: User) => {
@@ -20,8 +21,8 @@ const createSession = async (user: User) => {
                 .values(newSession)
                 .returning();
             return res;
-        } catch (e: any) {
-            if (e.code === UNIQUE_VIOLATION) {
+        } catch (e) {
+            if ((e as PostgresError).code === UNIQUE_VIOLATION) {
                 continue;
             }
             throw e;

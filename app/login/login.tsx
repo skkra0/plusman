@@ -75,7 +75,7 @@ export default function Login({ mode = 'signin', handleLogin } : {
                     <h1 className={classNames(openSans.className, "font-bold text-3xl text-main-5 mb-5")}>
                         { mode == 'signin' ? "Sign In" : "Sign Up" }
                     </h1>
-                    <form className="space-y-5 w-full" onSubmit={handleSubmit}>
+                    <form className="space-y-2 w-full" onSubmit={handleSubmit}>
                         <Input
                         placeholder="email@example.com"
                         label="Email"
@@ -84,15 +84,16 @@ export default function Login({ mode = 'signin', handleLogin } : {
                         onChange={onChangeEmail}
                         />
                         <PasswordInput
-                        type="password"
                         placeholder="Master password"
                         label="Master password"
                         value={loginState.pw}
                         error={loginState.pwErr}
                         onChange={onChangePassword}
                         />
-                        <p className="text-error-3 p-0 m-0">{loginState.serverErr}</p>
-                        <Button type='submit' level='main' className="border-b-2 border-neutral-1 hover:border-neutral-3 w-full">Submit</Button>
+                        <div>
+                            <p className="text-error-3 p-0 m-0 empty:before:inline-block">{loginState.serverErr}</p>
+                            <Button type='submit' level='main' className="border-b-2 border-neutral-1 hover:border-neutral-3 w-full">Submit</Button>
+                        </div>
                         <a href={mode == 'signin' ? "/login/sign-up" : "/login/sign-in"}>
                             <Button level='secondary' type='button' className="w-full">
                                 { mode == 'signin' ? 'Create an account instead' : 'Sign into existing account instead' }

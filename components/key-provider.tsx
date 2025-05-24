@@ -14,19 +14,23 @@ export const KeyContext = createContext<KeyContextType>({
     setKeys: () => {},
 });
 
-const PUBLIC_PATHS = ['/', '/login/sign-in', '/login/sign-up'];
+const PROTECTED_PATHS = ['/vault'];
+
 export default function KeyProvider({ children } : { children: ReactNode }) {
     const [keys, setKeys] = useState<DoubleCryptoKey | null>(null);
     const router = useRouter();
     const path = usePathname();
     useEffect(() => {
-        if (!keys && !PUBLIC_PATHS.includes(path)) {
-            (async () => {
-                await clearSession();
-                router.push('/login/sign-in');
-            })();
+        if (!keys) {
+            const isProtected = PROTECTED_PATHS.some( prefix => prefix === path || path.startsWith(prefix + '/') );
+            if (isProtected) {
+                (async () => {
+                    await clearSession();
+                    router.push('/login/sign-in');
+                })();
+            }
         }
-    }, [keys]);
+    }, [keys, router, path]);
     return <KeyContext.Provider value={{keys, setKeys}}>
         {children}
     </KeyContext.Provider>

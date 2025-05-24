@@ -2,7 +2,7 @@
 import Button from "@/components/button"
 import Input from "@/components/input"
 import { KeyContext } from "@/components/key-provider"
-import { decryptAndVerifyCrypto, getEncodedCiphertext } from "@/lib/auth/client/password.client"
+import { encryptAndSign } from "@/lib/auth/client/password.client"
 import { DataField, Item, NewItem } from "@/lib/db/schema"
 import { openSans } from "@/lib/fonts"
 import classNames from "classnames"
@@ -95,6 +95,11 @@ export default function EditItemModal({ state, setState, className }: {
             return;
         }
 
+        if (!formState.name.trim()) {
+            setErrorState({ nameErr: "Name is required. "});
+            return;
+        }
+
         if (state.mode === 'new') {
             const newItem: NewItem = {
                 name: formState.name,
@@ -105,7 +110,7 @@ export default function EditItemModal({ state, setState, className }: {
             const fields: DataField[] = ['url', 'username', 'password', 'note'];
             for (let field of fields) {
                 if (field in formState && formState[field]) {
-                    newItem.data[field] = await getEncodedCiphertext(keys!, Buffer.from(formState[field]));
+                    newItem.data[field] = await encryptAndSign(keys!, Buffer.from(formState[field]));
                 }
             }
             const res = await addItem(newItem);
@@ -128,7 +133,7 @@ export default function EditItemModal({ state, setState, className }: {
             const fields: DataField[] = ['url', 'username', 'password', 'note'];
             for (let field of fields) {
                 if (field in formState && formState[field]) {
-                    newItem.data[field] = await getEncodedCiphertext(keys!, Buffer.from(formState[field]));
+                    newItem.data[field] = await encryptAndSign(keys!, Buffer.from(formState[field]));
                 }
             }
 
@@ -216,14 +221,14 @@ export default function EditItemModal({ state, setState, className }: {
                             labelClassName='text-neutral-3' />
                     </div>
                     <div className="absolute bottom-0 left-0 w-full bg-main-4 rounded-b-lg p-2 flex justify-between">
-                            <Button
-                            level={ state.mode === 'new' ? 'secondary-2' : 'danger' }
+                        <Button
+                            level={state.mode === 'new' ? 'secondary-2' : 'danger'}
                             onClick={handleDiscard}
                             type='button'
                             className="h-full">
-                                {state.mode === 'new' ? 'Discard' : 'Delete this item'}
-                            </Button>
-                            <Button level='main' type='submit' className="h-full hover:shadow-md">Submit</Button>
+                            {state.mode === 'new' ? 'Discard' : 'Delete this item'}
+                        </Button>
+                        <Button level='main' type='submit' className="h-full hover:shadow-md">Submit</Button>
                     </div>
                 </form>
             </div>

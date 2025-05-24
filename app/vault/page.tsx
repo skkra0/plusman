@@ -5,8 +5,8 @@ import EditItemModal, { ModalState } from "./edit-item-modal";
 import ItemCard from "./item-card";
 import { VaultContext } from "./vault-provider";
 import { DataField, Item } from "@/lib/db/schema";
-import { decryptAndVerifyCrypto } from "@/lib/auth/client/password.client";
 import { KeyContext } from "@/components/key-provider";
+import { decryptAndVerify } from "@/lib/auth/client/password.client";
 
 export default function Vault() {
     const [modalState, setModalState] = useState<ModalState>({
@@ -24,9 +24,11 @@ export default function Vault() {
                 data: {...item.data},
             };
             const fields: DataField[] = ['url', 'username', 'password', 'note'];
+            const decoder = new TextDecoder('utf-8');
             for (let field of fields) {
                 if (field in item.data && item.data[field]) {
-                    decrypted.data[field] = await decryptAndVerifyCrypto(keys!, item.data[field]);
+                    const raw = await decryptAndVerify(keys!, item.data[field]);
+                    decrypted.data[field] = decoder.decode(raw);
                 }
             }
             setModalState({

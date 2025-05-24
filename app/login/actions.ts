@@ -17,7 +17,6 @@ export const signIn = async (email: string, clientHash: string) : Promise<SignIn
             error: 'Invalid email or password.',
         }
     }
-
     const masterPasswordHash = user.passwordHash;
     const decoded = Buffer.from(clientHash, 'base64')
     const res = await comparePasswords(decoded, masterPasswordHash);
