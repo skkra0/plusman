@@ -41,10 +41,12 @@ export default function Vault() {
 
     return <>
         <div className="w-full min-h-screen bg-neutral-1">
-            <header className="border-b border-main-2 min-h-1/12 p-1 pl-8 pr-8 flex justify-between items-end bg-header">
+            <header className="border-b border-main-2 min-h-1/12 p-2 pl-5 pr-8 flex justify-between items-end bg-header">
                 <h1 className="text-4xl text-main-1 m-0">Vault</h1>
                 <div className="flex items-end space-x-4">
-                    <Button level='main' className="inline-block mb-0 overflow-hidden" onClick={() => setModalState(s => ({...s, open: true}))}>New Login</Button>
+                    <Button level='accent' className="inline-block mb-0 hover:scale-105 transition" onClick={() => setModalState(s => ({...s, open: true}))}>
+                        New Login
+                    </Button>
                     <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 512 512"

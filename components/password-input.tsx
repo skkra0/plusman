@@ -4,8 +4,8 @@ import { useState } from "react";
 
 export default function PasswordInput({ className, labelClassName, label, error, ...props } : React.ComponentProps<"input"> & { label?: string, labelClassName?: string, error?: string }) {
     const [visible, setVisible] = useState(false);
-    return <div className="group relative">
-    <label className={labelClassName}>{label}
+    return <div className={`group relative ${labelClassName}`}>
+    <label>{label}
         <input
             type={visible ? 'input' : 'password'}
             className={classNames(
