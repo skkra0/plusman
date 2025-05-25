@@ -44,7 +44,6 @@ export const encryptAndSign = async (
 
 export const decryptAndVerify = async (key: DoubleCryptoKey, data: string): Promise<ArrayBuffer> => {
     const { iv, text, hmac } = parseStoredCiphertext(data);
-    console.log(text.length);
     const decrypted = await crypto.subtle.decrypt(
         { name: "AES-CBC", iv },
         key.encryptionKey,
@@ -74,8 +73,8 @@ export const getMasterKey = async (email: string, password: string): Promise<Uin
     return masterKey;
 };
 
-export const getStretchedMasterKey = async (masterKey: Uint8Array): Promise<DoubleCryptoKey> => {
-    const masterKeyCK = await crypto.subtle.importKey("raw", new Uint8Array(masterKey), "HKDF", false, ["deriveBits"]);
+export const stretchKey = async (baseKey: Uint8Array): Promise<Uint8Array> => {
+    const baseKeyWrapped = await crypto.subtle.importKey("raw", new Uint8Array(baseKey), "HKDF", false, ["deriveBits"]);
     const stretched = new Uint8Array(await crypto.subtle.deriveBits(
         {
             name: "HKDF",
@@ -83,8 +82,13 @@ export const getStretchedMasterKey = async (masterKey: Uint8Array): Promise<Doub
             salt: new Uint8Array(32),
             info: new TextEncoder().encode(""),
         },
-        masterKeyCK,
+        baseKeyWrapped,
         512));
+    return stretched;
+}
+
+export const getStretchedMasterKey = async (masterKey: Uint8Array): Promise<DoubleCryptoKey> => {
+    const stretched = await stretchKey(masterKey);
     const encryptionKey = new Uint8Array(stretched.subarray(0, 32));
     const authKey = new Uint8Array(stretched.subarray(32));
     return {
@@ -110,15 +114,18 @@ export const genSymmetricKey = () : Uint8Array<ArrayBuffer> => {
     return crypto.getRandomValues(new Uint8Array(64));
 }
 
-export const getUserKeys = async (key: DoubleCryptoKey, encryptedKey: string): Promise<DoubleCryptoKey> => {
-    const symmetricKey = new Uint8Array(await decryptAndVerify(key, encryptedKey));
-
+export const wrapKey = async (symmetricKey: Uint8Array<ArrayBuffer>) => {
     const encryptionKey = await getEncryptionCryptoKey(symmetricKey.subarray(0, 32));
     const authKey = await getAuthCryptoKey(symmetricKey.subarray(32));
     return { encryptionKey, authKey };
 }
 
-const parseStoredCiphertext = (encoded: string) : {
+export const getUserKeys = async (key: DoubleCryptoKey, encryptedKey: string): Promise<DoubleCryptoKey> => {
+    const symmetricKey = new Uint8Array(await decryptAndVerify(key, encryptedKey));
+    return wrapKey(symmetricKey);
+}
+
+export const parseStoredCiphertext = (encoded: string) : {
     iv: Uint8Array<ArrayBuffer>,
     text: Uint8Array<ArrayBuffer>,
     hmac: Uint8Array<ArrayBuffer>

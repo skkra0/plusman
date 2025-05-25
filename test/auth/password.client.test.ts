@@ -1,6 +1,21 @@
 import { execSync } from 'child_process';
-import { createDecipheriv, hkdfSync, randomBytes } from 'node:crypto';
-import { getMasterKey, getStretchedMasterKey, getMasterPasswordHash, encryptAndSign } from '../../lib/auth/client/password.client';
+import { hkdfSync, createCipheriv, randomBytes, randomInt, createHmac, pseudoRandomBytes } from 'node:crypto';
+import { decryptAndVerify, encryptAndSign, getMasterKey, getMasterPasswordHash, parseStoredCiphertext, stretchKey, wrapKey } from '../../lib/auth/client/password.client';
+
+describe("parseStoredCiphertext", () => {
+    for (let i = 0; i < 5; i++) {
+        test("Decodes to correct input", () => {
+            const part1 = randomBytes(16);
+            const part2 = randomBytes(randomInt(64));
+            const part3 = randomBytes(64);
+            const encoded = ([part1.toString("base64"), part2.toString("base64"), part3.toString("base64")]).join("|");
+            const { iv, text, hmac } = parseStoredCiphertext(encoded);
+            expect(Buffer.from(iv)).toEqual(part1);
+            expect(Buffer.from(text)).toEqual(part2);
+            expect(Buffer.from(hmac)).toEqual(part3);
+        });
+    }
+});
 
 describe("getMasterKey vs. Argon2 CLI", () => {
     const email = "alice@example.com";
@@ -14,45 +29,78 @@ describe("getMasterKey vs. Argon2 CLI", () => {
     });
 });
 
-// describe("getStretchedMasterKey vs Node hkdf", () => {
-//     const masterKey = Buffer.alloc(32, 0x1);
-//     const expectedKey = hkdfSync("sha256", masterKey, Buffer.alloc(0), Buffer.alloc(0), 64);
-//     const stretched = getStretchedMasterKey(masterKey);
-//     test("produces the same output as Node hkdf", () => {
-//         expect(Buffer.concat([stretched.encryptionKey, stretched.authKey]).buffer).toEqual(expectedKey);
-//     })
-// });
-
-describe("createEncodedProtectedKey", () => {
-    const stretched = randomBytes(64);
-    const key = { encryptionKey: stretched.subarray(0, 32), authKey: stretched.subarray(32)};
-
-    const symmetricKey = randomBytes(64);
-    const iv = randomBytes(16);
-    const decipher = createDecipheriv('aes-256-cbc', stretched.subarray(0, 32), iv);
-    const data = await encryptAndSign(key, symmetricKey, iv);
-    const [foundIV, psKey, hmac] = data.split('|').map(e => Buffer.from(e, 'base64'));
-    test("IV matches", () => {
-        expect(foundIV).toEqual(iv);
-    });
-
-    test("can be decrypted correctly", () => {
-        const decrypted = Buffer.concat([decipher.update(psKey), decipher.final()]);
-        expect(decrypted).toEqual(symmetricKey);
-    });
+describe("getStretchedMasterKey vs Node hkdf", () => {
+    for (let i = 0; i < 5; i++) {
+        const masterKey = new Uint8Array(randomBytes(32));
+        const expectedKey = new Uint8Array(hkdfSync("sha256", masterKey, Buffer.alloc(0), Buffer.alloc(0), 64));
+        test("Produces the correct stretched key", async () => {
+            const stretched = await stretchKey(masterKey);
+            expect(stretched).toEqual(expectedKey);
+        });
+    }
 });
 
 describe("getMasterPasswordHash (client) vs. Argon2 CLI", () => {
-    const masterKey = Buffer.alloc(32, "a".charCodeAt(0));
-    const password = "my_Password_123";
-    const cliHash = execSync(
-            `printf ${"a".repeat(32)} | argon2 '${password}' -id \
-            -t 2 \
-            -m 16 \
-            -p 2 \
-            -r | xxd -r -p | base64`).toString().trim();
-    test("produces the same output as Argon2 CLI", async () => {
-        const buf = await getMasterPasswordHash(masterKey, password);
-        expect(buf).toBe(cliHash);
-    });
+    for (let i = 0; i < 2; i++) {
+        const masterKey = randomBytes(16).toString('hex');
+        const password = pseudoRandomBytes(randomInt(6) + 6).toString('hex');
+        const cliHash = execSync(
+                `printf ${masterKey} | argon2 ${password} -id \
+                -t 2 \
+                -m 16 \
+                -p 2 \
+                -r | xxd -r -p | base64`).toString().trim();
+        test("produces the same output as Argon2 CLI", async () => {
+            const buf = await getMasterPasswordHash(new Uint8Array(Buffer.from(masterKey)), password);
+            expect(buf).toBe(cliHash);
+        });
+    }
+});
+
+describe("encryptAndSign vs. node Cipher and HMAC", () => {
+    const symmetricKey = pseudoRandomBytes(64);
+    const encryptionKey = symmetricKey.subarray(0, 32);
+    const authKey = symmetricKey.subarray(32);
+
+    for (let i = 0; i < 5; i++) {
+        const knownIV = new Uint8Array(randomBytes(16));
+        const data = new Uint8Array(randomBytes(randomInt(64)));
+
+        const cipher = createCipheriv('aes-256-cbc', encryptionKey, knownIV);
+        const sign = createHmac('sha512', authKey);
+        const expectCtxt = Buffer.concat([cipher.update(data), cipher.final()]);
+        sign.update(data);
+        const expectSignature = sign.digest();
+        
+        test("produces the same ciphertext and signature", async () => {
+            const cryptokeys = await wrapKey(new Uint8Array(symmetricKey));
+            const { iv, text, hmac } = parseStoredCiphertext(await encryptAndSign(cryptokeys, data, knownIV));
+            expect(iv).toEqual(knownIV);
+            expect(Buffer.from(text)).toEqual(expectCtxt);
+            expect(Buffer.from(hmac)).toEqual(expectSignature);
+        })
+    }
+});
+
+describe("decryptAndVerify vs. node Cipher and HMAC", () => {
+    const symmetricKey = pseudoRandomBytes(64);
+    const encryptionKey = symmetricKey.subarray(0, 32);
+    const authKey = symmetricKey.subarray(32);
+    for (let i = 0; i < 5; i++) {
+        const knownIV = randomBytes(16);
+        const data = randomBytes(randomInt(64));
+
+        const cipher = createCipheriv('aes-256-cbc', encryptionKey, knownIV);
+        const sign = createHmac('sha512', authKey);
+        const ctxt = Buffer.concat([cipher.update(data), cipher.final()]);
+        sign.update(data);
+        const signature = sign.digest();
+
+        test("decrypts correctly", async () => {
+            const combinedCtxt = [knownIV.toString('base64'), ctxt.toString('base64'), signature.toString('base64')].join('|');
+            const cryptokeys = await wrapKey(new Uint8Array(symmetricKey));
+            const decrypted = await decryptAndVerify(cryptokeys, combinedCtxt);
+            expect(Buffer.from(decrypted)).toEqual(data);
+        });
+    }
 });

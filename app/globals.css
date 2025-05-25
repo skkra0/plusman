@@ -17,7 +17,9 @@
 
   --color-accent-5: var(--color-violet-950);
   --color-accent-4: var(--color-violet-900);
+  --color-accent-3-5: oklch(0.497 0.2072 284.82);
   --color-accent-3: var(--color-violet-600);
+  --color-accent-2-5: oklch(0.5638 0.2121 300.71);
   --color-accent-2: var(--color-violet-400);
   --color-accent-1: var(--color-violet-300);
 

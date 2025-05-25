@@ -10,7 +10,7 @@ import { Dispatch, SetStateAction, useContext, useEffect, useState } from "react
 import { addItem, deleteItem, updateItem } from "./actions"
 import { VaultContext } from "./vault-provider"
 import PasswordInput from "@/components/password-input"
-
+import generator from "generate-password-browser";
 export interface ModalState {
     open: boolean,
     mode: 'new' | 'edit',
@@ -36,8 +36,16 @@ export default function EditItemModal({ state, setState, className }: {
     }, [state]);
 
     const { keys } = useContext(KeyContext);
-    const { vault, setVault } = useContext(VaultContext);
+    const { setVault } = useContext(VaultContext);
 
+    const [generatorOptions, setGeneratorOptions] = useState({
+        length: 12,
+        numbers: true,
+        symbols: true,
+        lowercase: true,
+        uppercase: true,
+        strict: true,
+    });
     const [formState, setFormState] = useState({
         name: "",
         url: "",
@@ -204,12 +212,25 @@ export default function EditItemModal({ state, setState, className }: {
                             value={formState.username}
                             onChange={onChange('username')}
                             labelClassName='text-neutral-3' />
+                        <div className="flex items-center justify-between">
                         <PasswordInput
                             label='Password'
                             placeholder='Password'
                             value={formState.password}
                             onChange={onChange('password')}
-                            labelClassName='text-neutral-3' />
+                            labelClassName='text-neutral-3 w-5/6 inline-block align-start' />
+                            <Button
+                                type='button'
+                                level='accent'
+                                className="text-md group hover:scale-105 transition"
+                                onClick={() => setFormState(s => ({
+                                    ...s,
+                                    password: generator.generate(generatorOptions)
+                                }))}
+                                >
+                                Generate
+                            </Button>
+                        </div>
                     </div>
                     <div className="bg-neutral-1 rounded-lg p-5 border-b-2 border-b-neutral-2 shadow-sm">
                         <Input

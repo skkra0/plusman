@@ -18,12 +18,7 @@ export default function SignUpPage() {
     
         const res = await signUp(email, mpHash, encodedKeys);
         if (res.success) {
-            const ck = await keys.getEncryptionCryptoKey(symmetricKey.subarray(0, 32));
-            const hk = await keys.getAuthCryptoKey(symmetricKey.subarray(32));
-            setKeys({
-                encryptionKey: ck,
-                authKey: hk,
-            });
+            setKeys(await keys.wrapKey(symmetricKey));
             
             router.push('/vault');
             return '';
