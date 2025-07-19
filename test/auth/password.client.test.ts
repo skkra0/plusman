@@ -71,7 +71,9 @@ describe("encryptAndSign vs. node Cipher and HMAC", () => {
         const cipher = createCipheriv('aes-256-cbc', encryptionKey, knownIV);
         const sign = createHmac('sha512', authKey);
         const expectCtxt = Buffer.concat([cipher.update(data), cipher.final()]);
-        sign.update(data);
+        
+        const combined = Buffer.concat([knownIV, expectCtxt]);
+        sign.update(combined);
         const expectSignature = sign.digest();
         
         test("produces the same ciphertext and signature", async () => {
@@ -95,7 +97,9 @@ describe("decryptAndVerify vs. node Cipher and HMAC", () => {
         const cipher = createCipheriv('aes-256-cbc', encryptionKey, knownIV);
         const sign = createHmac('sha512', authKey);
         const ctxt = Buffer.concat([cipher.update(data), cipher.final()]);
-        sign.update(data);
+
+        const combined = Buffer.concat([knownIV, ctxt]);
+        sign.update(combined);
         const signature = sign.digest();
 
         test("decrypts correctly", async () => {

@@ -37,23 +37,30 @@ export const encryptAndSign = async (
     }
 
     const encrypted = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-CBC', iv }, key.encryptionKey, data));
-    const hmac = new Uint8Array(await crypto.subtle.sign('HMAC', key.authKey, data));
+
+    const combined = new Uint8Array(iv.length + encrypted.length);
+    combined.set(iv);
+    combined.set(encrypted, iv.length);
+    const hmac = new Uint8Array(await crypto.subtle.sign('HMAC', key.authKey, combined));
 
     return encodeCiphertext(iv, encrypted, hmac);
 }
 
 export const decryptAndVerify = async (key: DoubleCryptoKey, data: string): Promise<ArrayBuffer> => {
     const { iv, text, hmac } = parseStoredCiphertext(data);
+    const combined = new Uint8Array(iv.length + text.length);
+    combined.set(iv);
+    combined.set(text, iv.length);
+    const hmacMatches = await crypto.subtle.verify('HMAC', key.authKey, hmac, combined);
+    if (!hmacMatches) {
+        throw new Error("Invalid data.");
+    }
+
     const decrypted = await crypto.subtle.decrypt(
         { name: "AES-CBC", iv },
         key.encryptionKey,
         text
     );
-  
-    const hmacMatches = await crypto.subtle.verify('HMAC', key.authKey, hmac, decrypted);
-    if (!hmacMatches) {
-        throw new Error("Invalid data.");
-    }
     return decrypted;
 }
 

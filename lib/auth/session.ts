@@ -37,7 +37,7 @@ export const setSession = async (user: User) => {
         expires: newSession.expiresAt,
         httpOnly: true,
         secure: true,
-        sameSite: 'lax',
+        sameSite: 'strict',
         path: '/',
     });
 }
