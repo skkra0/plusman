@@ -109,9 +109,9 @@ export const getMasterPasswordHash = async (masterKey: Uint8Array, password: str
         password: masterKey,
         salt: password,
         hashLength: 32,
-        iterations: 2,
+        iterations: 3,
         memorySize: 65536,
-        parallelism: 2,
+        parallelism: 4,
         outputType: "binary"
     });
     return uint8ArrayToB64(masterHashResult);

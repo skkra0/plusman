@@ -48,9 +48,9 @@ describe("getMasterPasswordHash (client) vs. Argon2 CLI", () => {
         const password = pseudoRandomBytes(randomInt(6) + 6).toString('hex');
         const cliHash = execSync(
                 `printf ${masterKey} | argon2 ${password} -id \
-                -t 2 \
+                -t 3 \
                 -m 16 \
-                -p 2 \
+                -p 4 \
                 -r | xxd -r -p | base64`).toString().trim();
         test("produces the same output as Argon2 CLI", async () => {
             const buf = await getMasterPasswordHash(new Uint8Array(Buffer.from(masterKey)), password);
