@@ -1,30 +1,24 @@
-<details>
-  <summary>Table of Contents</summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About</a>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-    </li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
-  </ol>
-</details>
 
-## About
+
+# Table of contents
+1. [About](#about)
+2. [Getting started](#getting-started)
+
+## About <a name="about"></a>
 Plusman is a password manager inspired by [Bitwarden](https://github.com/bitwarden/) that uses modern hashing and key derivation functions to secure your login information. Features end-to-end, zero-knowledge encryption.
 
-## Getting Started
+## Getting Started <a name="getting-started"></a>
+Install [Corepack](https://github.com/nodejs/corepack#readme) on your system:
+```bash
+npm install --global corepack@latest
+```
 
-First, run the development server:
+Install [pnpm](https://pnpm.io/installation):
+```bash
+corepack enable pnpm
+```
+
+Run the development server:
 
 ```bash
 pnpm dev
