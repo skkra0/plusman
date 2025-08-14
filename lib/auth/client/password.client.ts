@@ -9,11 +9,6 @@ export interface PasswordQuality {
     msg: string;
 };
 
-export interface DoubleCryptoKey {
-    encryptionKey: CryptoKey,
-    authKey: CryptoKey
-}
-
 export const validatePassword = (pw: string): PasswordQuality => {
     if (pw.length < MIN_LEN) {
         return {
@@ -28,38 +23,27 @@ export const validatePassword = (pw: string): PasswordQuality => {
     }
 };
 
-export const encryptAndSign = async (
-    key: DoubleCryptoKey,
+export const encrypt = async (
+    key: CryptoKey,
     data: Uint8Array<ArrayBuffer>,
-    iv?: Uint8Array<ArrayBuffer>): Promise<string> => {
-    if (!iv) {
-        iv = crypto.getRandomValues(new Uint8Array(16));
-    }
-
-    const encrypted = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-CBC', iv }, key.encryptionKey, data));
-
-    const combined = new Uint8Array(iv.length + encrypted.length);
-    combined.set(iv);
-    combined.set(encrypted, iv.length);
-    const hmac = new Uint8Array(await crypto.subtle.sign('HMAC', key.authKey, combined));
-
-    return encodeCiphertext(iv, encrypted, hmac);
+    iv: Uint8Array<ArrayBuffer>): Promise<string> => {    
+    const encrypted = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv, tagLength: 128 }, key, data));
+    const text = encrypted.slice(0, encrypted.length - 16);
+    const authTag = encrypted.slice(encrypted.length - 16);
+    return encodeBytes(iv, text, authTag);
 }
 
-export const decryptAndVerify = async (key: DoubleCryptoKey, data: string): Promise<ArrayBuffer> => {
-    const { iv, text, hmac } = parseStoredCiphertext(data);
-    const combined = new Uint8Array(iv.length + text.length);
-    combined.set(iv);
-    combined.set(text, iv.length);
-    const hmacMatches = await crypto.subtle.verify('HMAC', key.authKey, hmac, combined);
-    if (!hmacMatches) {
-        throw new Error("Invalid data.");
-    }
+export const decrypt = async (key: CryptoKey, data: string): Promise<ArrayBuffer> => {
+    const { iv, text, authTag } = parseStoredCiphertext(data);
+    
+    const ctxt = new Uint8Array(text.length + authTag.length);
+    ctxt.set(text, 0);
+    ctxt.set(authTag, text.length)
 
     const decrypted = await crypto.subtle.decrypt(
-        { name: "AES-CBC", iv },
-        key.encryptionKey,
-        text
+        { name: "AES-GCM", iv, tagLength: 128 },
+        key,
+        ctxt
     );
     return decrypted;
 }
@@ -80,30 +64,6 @@ export const getMasterKey = async (email: string, password: string): Promise<Uin
     return masterKey;
 };
 
-export const stretchKey = async (baseKey: Uint8Array): Promise<Uint8Array> => {
-    const baseKeyWrapped = await crypto.subtle.importKey("raw", new Uint8Array(baseKey), "HKDF", false, ["deriveBits"]);
-    const stretched = new Uint8Array(await crypto.subtle.deriveBits(
-        {
-            name: "HKDF",
-            hash: "SHA-256",
-            salt: new Uint8Array(32),
-            info: new TextEncoder().encode(""),
-        },
-        baseKeyWrapped,
-        512));
-    return stretched;
-}
-
-export const getStretchedMasterKey = async (masterKey: Uint8Array): Promise<DoubleCryptoKey> => {
-    const stretched = await stretchKey(masterKey);
-    const encryptionKey = new Uint8Array(stretched.subarray(0, 32));
-    const authKey = new Uint8Array(stretched.subarray(32));
-    return {
-        encryptionKey: await getEncryptionCryptoKey(encryptionKey),
-        authKey: await getAuthCryptoKey(authKey),
-    };
-}
-
 export const getMasterPasswordHash = async (masterKey: Uint8Array, password: string): Promise<string> => {
     const masterHashResult = await argon2id({
         password: masterKey,
@@ -118,47 +78,36 @@ export const getMasterPasswordHash = async (masterKey: Uint8Array, password: str
 };
 
 export const genSymmetricKey = () : Uint8Array<ArrayBuffer> => {
-    return crypto.getRandomValues(new Uint8Array(64));
+    return crypto.getRandomValues(new Uint8Array(32));
 }
 
-export const wrapKey = async (symmetricKey: Uint8Array<ArrayBuffer>) => {
-    const encryptionKey = await getEncryptionCryptoKey(symmetricKey.subarray(0, 32));
-    const authKey = await getAuthCryptoKey(symmetricKey.subarray(32));
-    return { encryptionKey, authKey };
-}
-
-export const getUserKeys = async (key: DoubleCryptoKey, encryptedKey: string): Promise<DoubleCryptoKey> => {
-    const symmetricKey = new Uint8Array(await decryptAndVerify(key, encryptedKey));
-    return wrapKey(symmetricKey);
+export const getUserKey = async (key: CryptoKey, encryptedKey: string): Promise<CryptoKey> => {
+    const symmetricKey = new Uint8Array(await decrypt(key, encryptedKey));
+    return getCryptoKey(symmetricKey);
 }
 
 export const parseStoredCiphertext = (encoded: string) : {
     iv: Uint8Array<ArrayBuffer>,
     text: Uint8Array<ArrayBuffer>,
-    hmac: Uint8Array<ArrayBuffer>
+    authTag: Uint8Array<ArrayBuffer>
 } => {
-    const parts = encoded.split('|')
+    const parts = encoded.split('|');
     if (parts.length != ENCRYPTED_KEY_PARTS) {
         throw new Error("Invalid data");
     }
     const iv = b64ToUint8Array(parts[0]);
     const text = b64ToUint8Array(parts[1]);
-    const hmac = b64ToUint8Array(parts[2]);
-
-    return { iv, text, hmac };
+    const authTag = b64ToUint8Array(parts[2]);
+    return { iv, text, authTag };
 }
 
-const encodeCiphertext = (iv: Uint8Array, text: Uint8Array, hmac: Uint8Array): string => {
-    const parts = [uint8ArrayToB64(iv), uint8ArrayToB64(text), uint8ArrayToB64(hmac)];
-    return parts.join('|');
+const encodeBytes = (...values: Uint8Array[]): string => {
+    const b64 = values.map(value => uint8ArrayToB64(value));
+    return b64.join('|');
 }
 
-export const getEncryptionCryptoKey = async (key: BufferSource): Promise<CryptoKey> => {
-    return crypto.subtle.importKey('raw', key, { name: 'AES-CBC' }, false, ['encrypt', 'decrypt']);
-}
-
-export const getAuthCryptoKey = async (key: BufferSource): Promise<CryptoKey> => {
-    return crypto.subtle.importKey('raw', key, { name: 'HMAC', 'hash': { 'name': 'SHA-512' } }, false, ['sign', 'verify']);
+export const getCryptoKey = async (key: BufferSource): Promise<CryptoKey> => {
+    return crypto.subtle.importKey('raw', key, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
 }
 
 const uint8ArrayToB64 = (arr: Uint8Array) : string => {
