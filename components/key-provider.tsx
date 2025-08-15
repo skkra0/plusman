@@ -1,27 +1,25 @@
 'use client'
-import { DoubleCryptoKey } from "@/lib/auth/client/password.client";
 import { clearSession } from "@/lib/auth/session";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, Dispatch, ReactNode, SetStateAction, useEffect, useState } from "react";
 
-export type KeyContextType = {
-    keys: DoubleCryptoKey | null,
-    setKeys: Dispatch<SetStateAction<DoubleCryptoKey | null>>,
-};
 
-export const KeyContext = createContext<KeyContextType>({
-    keys: null,
-    setKeys: () => {},
+export const KeyContext = createContext<{
+    key: CryptoKey | null,
+    setKey: Dispatch<SetStateAction<CryptoKey | null>>,
+}>({
+    key: null,
+    setKey: () => {},
 });
 
 const PROTECTED_PATHS = ['/vault'];
 
 export default function KeyProvider({ children } : { children: ReactNode }) {
-    const [keys, setKeys] = useState<DoubleCryptoKey | null>(null);
+    const [key, setKey] = useState<CryptoKey | null>(null);
     const router = useRouter();
     const path = usePathname();
     useEffect(() => {
-        if (!keys) {
+        if (!key) {
             const isProtected = PROTECTED_PATHS.some( prefix => prefix === path || path.startsWith(prefix + '/') );
             if (isProtected) {
                 (async () => {
@@ -30,8 +28,8 @@ export default function KeyProvider({ children } : { children: ReactNode }) {
                 })();
             }
         }
-    }, [keys, router, path]);
-    return <KeyContext.Provider value={{keys, setKeys}}>
+    }, [key, router, path]);
+    return <KeyContext.Provider value={{key, setKey}}>
         {children}
     </KeyContext.Provider>
 }

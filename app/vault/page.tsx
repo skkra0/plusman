@@ -6,7 +6,7 @@ import ItemCard from "./item-card";
 import { VaultContext } from "./vault-provider";
 import { DataField, Item } from "@/lib/db/schema";
 import { KeyContext } from "@/components/key-provider";
-import { decryptAndVerify } from "@/lib/auth/client/password.client";
+import { decrypt } from "@/lib/auth/client/password.client";
 
 export default function Vault() {
     const [modalState, setModalState] = useState<ModalState>({
@@ -14,7 +14,7 @@ export default function Vault() {
         mode: 'new',
     });
 
-    const { keys } = useContext(KeyContext);
+    const { key } = useContext(KeyContext);
     const { vault } = useContext(VaultContext);
 
     const onClickItem = (item: Item) => {
@@ -27,7 +27,7 @@ export default function Vault() {
             const decoder = new TextDecoder('utf-8');
             for (let field of fields) {
                 if (field in item.data && item.data[field]) {
-                    const raw = await decryptAndVerify(keys!, item.data[field]);
+                    const raw = await decrypt(key!, item.data[field]);
                     decrypted.data[field] = decoder.decode(raw);
                 }
             }

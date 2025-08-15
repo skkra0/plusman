@@ -2,7 +2,7 @@
 import Button from "@/components/button"
 import Input from "@/components/input"
 import { KeyContext } from "@/components/key-provider"
-import { encryptAndSign } from "@/lib/auth/client/password.client"
+import { encrypt } from "@/lib/auth/client/password.client"
 import { DataField, Item, NewItem } from "@/lib/db/schema"
 import { openSans } from "@/lib/fonts"
 import classNames from "classnames"
@@ -35,7 +35,7 @@ export default function EditItemModal({ state, setState, className }: {
         }
     }, [state]);
 
-    const { keys } = useContext(KeyContext);
+    const { key } = useContext(KeyContext);
     const { setVault } = useContext(VaultContext);
 
     const [generatorOptions, setGeneratorOptions] = useState({
@@ -118,7 +118,7 @@ export default function EditItemModal({ state, setState, className }: {
             const fields: DataField[] = ['url', 'username', 'password', 'note'];
             for (let field of fields) {
                 if (field in formState && formState[field]) {
-                    newItem.data[field] = await encryptAndSign(keys!, Buffer.from(formState[field]));
+                    newItem.data[field] = await encrypt(key!, Buffer.from(formState[field]), crypto.getRandomValues(new Uint8Array(12)));
                 }
             }
             const res = await addItem(newItem);
@@ -141,7 +141,7 @@ export default function EditItemModal({ state, setState, className }: {
             const fields: DataField[] = ['url', 'username', 'password', 'note'];
             for (let field of fields) {
                 if (field in formState && formState[field]) {
-                    newItem.data[field] = await encryptAndSign(keys!, Buffer.from(formState[field]));
+                    newItem.data[field] = await encrypt(key!, Buffer.from(formState[field]), crypto.getRandomValues(new Uint8Array(12)));
                 }
             }
 

@@ -78,6 +78,7 @@ export default function Login({ mode = 'signin', handleLogin } : {
                     <form className="space-y-2 w-full" onSubmit={handleSubmit}>
                         <Input
                         placeholder="email@example.com"
+                        name="email"
                         label="Email"
                         value={loginState.email}
                         error={loginState.emailErr}
@@ -85,6 +86,7 @@ export default function Login({ mode = 'signin', handleLogin } : {
                         />
                         <PasswordInput
                         placeholder="Master password"
+                        name="password"
                         label="Master password"
                         value={loginState.pw}
                         error={loginState.pwErr}

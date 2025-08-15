@@ -48,7 +48,7 @@ export const decrypt = async (key: CryptoKey, data: string): Promise<ArrayBuffer
     return decrypted;
 }
 
-export const getMasterKey = async (email: string, password: string): Promise<Uint8Array> => {
+export const getMasterKey = async (email: string, password: string): Promise<Uint8Array<ArrayBuffer>> => {
     const normalized = email.trim().toLowerCase();
     const salt = await sha256(normalized);
     const masterKey = await argon2id({
@@ -61,7 +61,8 @@ export const getMasterKey = async (email: string, password: string): Promise<Uin
         outputType: "binary"
     });
 
-    return masterKey;
+    // Normalize for Crypto API
+    return new Uint8Array(masterKey);
 };
 
 export const getMasterPasswordHash = async (masterKey: Uint8Array, password: string): Promise<string> => {
@@ -106,7 +107,7 @@ const encodeBytes = (...values: Uint8Array[]): string => {
     return b64.join('|');
 }
 
-export const getCryptoKey = async (key: BufferSource): Promise<CryptoKey> => {
+export const getCryptoKey = async (key: ArrayBufferView<ArrayBuffer>): Promise<CryptoKey> => {
     return crypto.subtle.importKey('raw', key, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
 }
 
