@@ -79,7 +79,7 @@ describe("encrypt vs. node Cipher", () => {
     ];
 
     for (let values of data) {
-        const [key, knownIV, ptxt] = Buffer.from(values, "base64");
+        const [key, knownIV, ptxt] = values.map(value => Buffer.from(value, "base64"));
         const cipher = createCipheriv('aes-256-gcm', key, knownIV);
         const expectCtxt = Buffer.concat([cipher.update(ptxt), cipher.final()]);
         const expectAuthTag = cipher.getAuthTag();
@@ -102,7 +102,7 @@ describe("decrypt vs. node Cipher", () => {
         ["CHJioyvCJ5FiL/Czl+jmc2P6IomPeynoD3vklBBVjJ8=", "Bh3HrB5q9VQFZ615", "usNvqOwTn324t5Sz63ZyaA=="],
     ];
     for (let values of data) {
-        const [key, knownIV, ptxt] = Buffer.from(values, "base64");
+        const [key, knownIV, ptxt] = values.map(value => Buffer.from(value, "base64"));
 
         const cipher = createCipheriv('aes-256-gcm', key, knownIV);
         const enc = Buffer.concat([cipher.update(ptxt), cipher.final()]);
